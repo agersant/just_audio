@@ -50,16 +50,6 @@ class _MyAppState extends State<MyApp> {
       ),
     ),
     AudioSource.uri(
-      Uri.parse("https://s3.amazonaws.com/scifri-segments/scifri201711241.mp3"),
-      tag: MediaItem(
-        id: '${_nextMediaId++}',
-        album: "Science Friday",
-        title: "From Cat Rheology To Operatic Incompetence",
-        artUri: Uri.parse(
-            "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg"),
-      ),
-    ),
-    AudioSource.uri(
       Uri.parse("asset:///audio/nature.mp3"),
       tag: MediaItem(
         id: '${_nextMediaId++}',
@@ -80,6 +70,19 @@ class _MyAppState extends State<MyApp> {
       statusBarColor: Colors.black,
     ));
     _init();
+  }
+
+  void _addLockedSource() {
+    _playlist.add(LockCachingAudioSource(
+      Uri.parse("https://s3.amazonaws.com/scifri-segments/scifri201711241.mp3"),
+      tag: MediaItem(
+        id: '${_nextMediaId++}',
+        album: "Science Friday",
+        title: "From Cat Rheology To Operatic Incompetence",
+        artUri: Uri.parse(
+            "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg"),
+      ),
+    ));
   }
 
   Future<void> _init() async {
@@ -150,6 +153,10 @@ class _MyAppState extends State<MyApp> {
                 ),
               ),
               ControlButtons(_player),
+              IconButton(
+                icon: Icon(Icons.error),
+                onPressed: _addLockedSource,
+              ),
               StreamBuilder<PositionData>(
                 stream: _positionDataStream,
                 builder: (context, snapshot) {

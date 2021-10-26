@@ -37,7 +37,7 @@ class _MyAppState extends State<MyApp> {
     _init();
   }
 
-  void _addLockedSource() async {
+  void _addLockedSource() {
     _playlist.add(LockCachingAudioSource(
       Uri.parse("https://filesamples.com/samples/audio/mp3/sample4.mp3"),
       tag: MediaItem(

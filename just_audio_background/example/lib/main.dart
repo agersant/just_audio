@@ -39,7 +39,7 @@ class _MyAppState extends State<MyApp> {
 
   void _addLockedSource() {
     _playlist.add(LockCachingAudioSource(
-      Uri.parse("https://filesamples.com/samples/audio/mp3/sample4.mp3"),
+      Uri.parse("https://s3.amazonaws.com/scifri-segments/scifri201711241.mp3"),
       tag: MediaItem(
         id: '${_nextMediaId++}',
         album: "Science Friday",
@@ -48,7 +48,6 @@ class _MyAppState extends State<MyApp> {
             "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg"),
       ),
     ));
-    _player.play();
   }
 
   Future<void> _init() async {

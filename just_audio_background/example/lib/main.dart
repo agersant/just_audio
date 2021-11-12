@@ -24,53 +24,57 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   static int _nextMediaId = 0;
   late AudioPlayer _player;
-  final _playlist = ConcatenatingAudioSource(children: [
-    ClippingAudioSource(
-      start: Duration(seconds: 60),
-      end: Duration(seconds: 90),
-      child: AudioSource.uri(Uri.parse(
-          "https://s3.amazonaws.com/scifri-episodes/scifri20181123-episode.mp3")),
-      tag: MediaItem(
-        id: '${_nextMediaId++}',
-        album: "Science Friday",
-        title: "A Salute To Head-Scratching Science (30 seconds)",
-        artUri: Uri.parse(
-            "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg"),
-      ),
-    ),
-    AudioSource.uri(
-      Uri.parse(
-          "https://s3.amazonaws.com/scifri-episodes/scifri20181123-episode.mp3"),
-      tag: MediaItem(
-        id: '${_nextMediaId++}',
-        album: "Science Friday",
-        title: "A Salute To Head-Scratching Science",
-        artUri: Uri.parse(
-            "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg"),
-      ),
-    ),
-    AudioSource.uri(
-      Uri.parse("https://s3.amazonaws.com/scifri-segments/scifri201711241.mp3"),
-      tag: MediaItem(
-        id: '${_nextMediaId++}',
-        album: "Science Friday",
-        title: "From Cat Rheology To Operatic Incompetence",
-        artUri: Uri.parse(
-            "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg"),
-      ),
-    ),
-    AudioSource.uri(
-      Uri.parse("asset:///audio/nature.mp3"),
-      tag: MediaItem(
-        id: '${_nextMediaId++}',
-        album: "Public Domain",
-        title: "Nature Sounds",
-        artUri: Uri.parse(
-            "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg"),
-      ),
-    ),
-  ]);
+  ConcatenatingAudioSource _playlist = ConcatenatingAudioSource(children: []);
   int _addedCount = 0;
+
+  void clearPlaylist() async {
+    _playlist = ConcatenatingAudioSource(children: []);
+    _player.setAudioSource(_playlist);
+  }
+
+  void queueSongs() async {
+    final entries = [
+      AudioSource.uri(
+        Uri.parse(
+            "https://s3.amazonaws.com/scifri-episodes/scifri20181123-episode.mp3"),
+        tag: MediaItem(
+          id: '${_nextMediaId++}',
+          album: "Science Friday",
+          title: "A Salute To Head-Scratching Science",
+          artUri: Uri.parse(
+              "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg"),
+        ),
+      ),
+      AudioSource.uri(
+        Uri.parse(
+            "https://s3.amazonaws.com/scifri-segments/scifri201711241.mp3"),
+        tag: MediaItem(
+          id: '${_nextMediaId++}',
+          album: "Science Friday",
+          title: "From Cat Rheology To Operatic Incompetence",
+          artUri: Uri.parse(
+              "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg"),
+        ),
+      ),
+      AudioSource.uri(
+        Uri.parse("asset:///audio/nature.mp3"),
+        tag: MediaItem(
+          id: '${_nextMediaId++}',
+          album: "Public Domain",
+          title: "Nature Sounds",
+          artUri: Uri.parse(
+              "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg"),
+        ),
+      )
+    ];
+
+    final bool wasEmpty = _playlist.sequence.isEmpty;
+    final insertIndex = wasEmpty ? 0 : 1 + (_player.currentIndex ?? -1);
+    await _playlist.insertAll(insertIndex, entries);
+    if (wasEmpty) {
+      _player.play();
+    }
+  }
 
   @override
   void initState() {
@@ -123,6 +127,9 @@ class _MyAppState extends State<MyApp> {
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              ElevatedButton(onPressed: queueSongs, child: Text("Queue songs")),
+              ElevatedButton(
+                  onPressed: clearPlaylist, child: Text("Clear Playlist")),
               Expanded(
                 child: StreamBuilder<SequenceState?>(
                   stream: _player.sequenceStateStream,
@@ -133,14 +140,6 @@ class _MyAppState extends State<MyApp> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Center(
-                                child:
-                                    Image.network(metadata.artUri.toString())),
-                          ),
-                        ),
                         Text(metadata.album!,
                             style: Theme.of(context).textTheme.headline6),
                         Text(metadata.title),

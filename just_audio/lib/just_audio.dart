@@ -15,7 +15,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:uuid/uuid.dart';
 
-final _uuid = Uuid();
+const _uuid = Uuid();
 
 JustAudioPlatform? _pluginPlatformCache;
 
@@ -30,7 +30,7 @@ JustAudioPlatform get _pluginPlatform {
     try {
       pluginPlatform.disposeAllPlayers(DisposeAllPlayersRequest());
     } catch (e) {
-      print(e);
+      // Silently ignore if a platform doesn't support this method.
     }
     _pluginPlatformCache = pluginPlatform;
   }
@@ -304,6 +304,7 @@ class AudioPlayer {
         try {
           oldAssetCacheDir.deleteSync(recursive: true);
         } catch (e) {
+          // ignore: avoid_print
           print("Failed to delete old asset cache dir: $e");
         }
       }
@@ -537,8 +538,8 @@ class AudioPlayer {
       if (!_disposed) {
         _positionSubject!.addStream(createPositionStream(
             steps: 800,
-            minPeriod: Duration(milliseconds: 16),
-            maxPeriod: Duration(milliseconds: 200)));
+            minPeriod: const Duration(milliseconds: 16),
+            maxPeriod: const Duration(milliseconds: 200)));
       }
     }
     return _positionSubject!.stream;
@@ -1117,7 +1118,9 @@ class AudioPlayer {
       _idlePlatform = null;
     }
     _audioSource = null;
-    _audioSources.values.forEach((s) => s._dispose());
+    for (var s in _audioSources.values) {
+      s._dispose();
+    }
     _audioSources.clear();
     _proxy.stop();
     await _durationSubject.close();
@@ -1264,7 +1267,7 @@ class AudioPlayer {
       _playerDataSubscription?.cancel();
       if (!force) {
         final oldPlatform = _platformValue!;
-        if (!(oldPlatform is _IdleAudioPlayer)) {
+        if (oldPlatform is! _IdleAudioPlayer) {
           await _disposePlatform(oldPlatform);
         }
       }
@@ -1945,6 +1948,10 @@ class _ProxyHttpServer {
         final handler = _handlerMap[uriPath]!;
         handler(request);
       }
+    }, onDone: () {
+      _running = false;
+    }, onError: (Object e, StackTrace st) {
+      _running = false;
     });
   }
 
@@ -2862,6 +2869,8 @@ class LockCachingAudioSource extends StreamAudioSource {
           ));
         }, onError: (dynamic e, StackTrace? stackTrace) {
           request.fail(e, stackTrace);
+        }).onError((Object e, StackTrace st) {
+          request.fail(e, st);
         });
       }
     }, onDone: () async {
@@ -2873,12 +2882,11 @@ class LockCachingAudioSource extends StreamAudioSource {
           cacheResponse.controller.close();
         }
       }
-      (await _partialCacheFile).renameSync((await cacheFile).path);
+      (await _partialCacheFile).renameSync(cacheFile.path);
       await subscription.cancel();
       httpClient.close();
       _downloading = false;
     }, onError: (Object e, StackTrace stackTrace) async {
-      print(stackTrace);
       (await _partialCacheFile).deleteSync();
       httpClient.close();
       // Fail all pending requests
@@ -2989,12 +2997,16 @@ _ProxyHandler _proxyHandlerForSource(StreamAudioSource source) {
     request.response.headers.clear();
 
     StreamAudioResponse sourceResponse;
+    Stream<List<int>> stream;
     try {
       sourceResponse =
           await source.request(rangeRequest?.start, rangeRequest?.endEx);
-    } catch (e, stackTrace) {
-      print("Proxy request failed: $e");
-      print(stackTrace);
+      stream = sourceResponse.stream.asBroadcastStream();
+      stream.listen((event) {},
+          onError: source._player?._playbackEventSubject.addError);
+    } catch (e, st) {
+      // ignore: avoid_print
+      print("Proxy request failed: $e\n$st");
 
       request.response.headers.clear();
       request.response.statusCode = HttpStatus.internalServerError;
@@ -3024,7 +3036,7 @@ _ProxyHandler _proxyHandlerForSource(StreamAudioSource source) {
     }
 
     // Pipe response
-    await sourceResponse.stream.pipe(request.response);
+    await stream.pipe(request.response);
     await request.response.close();
   }
 
@@ -3044,9 +3056,9 @@ _ProxyHandler _proxyHandlerForUri(Uri uri, Map<String, String>? headers) {
     request.headers.forEach((name, value) {
       originRequest.headers.set(name, value);
     });
-    headers?.entries.forEach((entry) {
+    for (var entry in headers?.entries ?? <MapEntry<String, String>>[]) {
       originRequest.headers.set(entry.key, entry.value);
-    });
+    }
     if (host != null) {
       originRequest.headers.set('host', host);
     } else {
@@ -3155,7 +3167,7 @@ class DefaultShuffleOrder extends ShuffleOrder {
     indices.shuffle(_random);
     if (initialIndex == null) return;
 
-    final initialPos = 0;
+    const initialPos = 0;
     final swapPos = indices.indexOf(initialIndex);
     // Swap the indices at initialPos and swapPos.
     final swapIndex = indices[initialPos];
@@ -3413,7 +3425,9 @@ class AudioPipeline {
       <AudioEffect>[...androidAudioEffects, ...darwinAudioEffects];
 
   void _setup(AudioPlayer player) {
-    _audioEffects.forEach((effect) => effect._setup(player));
+    for (var effect in _audioEffects) {
+      effect._setup(player);
+    }
   }
 }
 

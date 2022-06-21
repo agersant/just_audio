@@ -1,3 +1,40 @@
+## 0.9.25
+
+* Fix compile issue with Android SDK 33.
+
+## 0.9.24
+
+* Bump Android compileSdkVersion to 31.
+
+## 0.9.23
+
+* Fallback to constant bitrate seeking on Android.
+
+## 0.9.22
+
+* Migrate to Flutter 3, Xcode 13, ExoPlayer 2.17.1.
+* Add just_audio_mpv and just_audio_windows to example.
+
+## 0.9.21
+
+* Handle and report network disconnections in StreamAudioSource.
+* Fix iOS/macOS bug starting with empty playlist.
+* Migrate from pedantic to flutter_lints.
+* Accept Longs in AndroidLivePlaybackSpeedControl where appropriate (@aam).
+
+## 0.9.20
+
+* Fix initial position on iOS/macOS when switching sources (@addie9000).
+
+## 0.9.19
+
+* Dispose players on iOS/macOS hot restart.
+* Fix initialIndex out of bounds bug on iOS/macOS.
+
+## 0.9.18
+
+* Fix null duration bug on LockCachingAudioSource.
+
 ## 0.9.17
 
 * LockCachingAudioSource works with servers not supporting range requests.

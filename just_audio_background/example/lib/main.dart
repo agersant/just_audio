@@ -25,52 +25,51 @@ class MyApp extends StatefulWidget {
 class MyAppState extends State<MyApp> {
   static int _nextMediaId = 0;
   late AudioPlayer _player;
-  final _playlist = ConcatenatingAudioSource(children: [
-    ClippingAudioSource(
-      start: const Duration(seconds: 60),
-      end: const Duration(seconds: 90),
-      child: AudioSource.uri(Uri.parse(
-          "https://s3.amazonaws.com/scifri-episodes/scifri20181123-episode.mp3")),
-      tag: MediaItem(
-        id: '${_nextMediaId++}',
-        album: "Science Friday",
-        title: "A Salute To Head-Scratching Science (30 seconds)",
-        artUri: Uri.parse(
-            "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg"),
-      ),
-    ),
-    AudioSource.uri(
-      Uri.parse(
-          "https://s3.amazonaws.com/scifri-episodes/scifri20181123-episode.mp3"),
-      tag: MediaItem(
-        id: '${_nextMediaId++}',
-        album: "Science Friday",
-        title: "A Salute To Head-Scratching Science",
-        artUri: Uri.parse(
-            "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg"),
-      ),
-    ),
-    AudioSource.uri(
-      Uri.parse("https://s3.amazonaws.com/scifri-segments/scifri201711241.mp3"),
-      tag: MediaItem(
-        id: '${_nextMediaId++}',
-        album: "Science Friday",
-        title: "From Cat Rheology To Operatic Incompetence",
-        artUri: Uri.parse(
-            "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg"),
-      ),
-    ),
-    AudioSource.uri(
-      Uri.parse("asset:///audio/nature.mp3"),
-      tag: MediaItem(
-        id: '${_nextMediaId++}',
-        album: "Public Domain",
-        title: "Nature Sounds",
-        artUri: Uri.parse(
-            "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg"),
-      ),
-    ),
-  ]);
+
+  static ConcatenatingAudioSource makePlaylist() {
+    ConcatenatingAudioSource audioSource =
+        ConcatenatingAudioSource(children: []);
+    for (int i = 0; i < 1000; i++) {
+      audioSource.add(AudioSource.uri(
+        Uri.parse(
+            "https://s3.amazonaws.com/scifri-episodes/scifri20181123-episode.mp3"),
+        tag: MediaItem(
+          id: '${_nextMediaId++}',
+          album: "Science Friday",
+          title: "A Salute To Head-Scratching Science",
+          artUri: Uri.parse(
+              "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg"),
+        ),
+      ));
+
+      audioSource.add(AudioSource.uri(
+        Uri.parse(
+            "https://s3.amazonaws.com/scifri-segments/scifri201711241.mp3"),
+        tag: MediaItem(
+          id: '${_nextMediaId++}',
+          album: "Science Friday",
+          title: "From Cat Rheology To Operatic Incompetence",
+          artUri: Uri.parse(
+              "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg"),
+        ),
+      ));
+
+      audioSource.add(AudioSource.uri(
+        Uri.parse("asset:///audio/nature.mp3"),
+        tag: MediaItem(
+          id: '${_nextMediaId++}',
+          album: "Public Domain",
+          title: "Nature Sounds",
+          artUri: Uri.parse(
+              "https://media.wnyc.org/i/1400/1400/l/80/1/ScienceFriday_WNYCStudios_1400.jpg"),
+        ),
+      ));
+    }
+
+    return audioSource;
+  }
+
+  final _playlist = makePlaylist();
   int _addedCount = 0;
 
   @override

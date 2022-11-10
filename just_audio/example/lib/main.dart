@@ -19,6 +19,7 @@ class MyApp extends StatefulWidget {
 }
 
 class MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  static int _nextMediaId = 0;
   final _player = AudioPlayer();
 
   @override
@@ -29,6 +30,28 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       statusBarColor: Colors.black,
     ));
     _init();
+  }
+
+  static ConcatenatingAudioSource makePlaylist() {
+    ConcatenatingAudioSource audioSource =
+        ConcatenatingAudioSource(children: []);
+    for (int i = 0; i < 1000; i++) {
+      audioSource.add(AudioSource.uri(
+        Uri.parse(
+            "https://s3.amazonaws.com/scifri-episodes/scifri20181123-episode.mp3"),
+      ));
+
+      audioSource.add(AudioSource.uri(
+        Uri.parse(
+            "https://s3.amazonaws.com/scifri-segments/scifri201711241.mp3"),
+      ));
+
+      audioSource.add(AudioSource.uri(
+        Uri.parse("asset:///audio/nature.mp3"),
+      ));
+    }
+
+    return audioSource;
   }
 
   Future<void> _init() async {
@@ -44,8 +67,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     // Try to load audio from a source and catch any errors.
     try {
       // AAC example: https://dl.espressif.com/dl/audio/ff-16b-2c-44100hz.aac
-      await _player.setAudioSource(AudioSource.uri(Uri.parse(
-          "https://s3.amazonaws.com/scifri-episodes/scifri20181123-episode.mp3")));
+      await _player.setAudioSource(makePlaylist());
     } catch (e) {
       print("Error loading audio source: $e");
     }
@@ -126,22 +148,21 @@ class ControlButtons extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        StreamBuilder<bool>(
+            stream: player.shuffleModeEnabledStream,
+            builder: (context, snapshot) {
+              final shuffleModeEnabled = snapshot.data ?? false;
+              return IconButton(
+                icon: Icon(shuffleModeEnabled
+                    ? Icons.shuffle_on_outlined
+                    : Icons.shuffle_outlined),
+                onPressed: () {
+                  player.setShuffleModeEnabled(!player.shuffleModeEnabled);
+                },
+              );
+            }),
+
         // Opens volume slider dialog
-        IconButton(
-          icon: const Icon(Icons.volume_up),
-          onPressed: () {
-            showSliderDialog(
-              context: context,
-              title: "Adjust volume",
-              divisions: 10,
-              min: 0.0,
-              max: 1.0,
-              value: player.volume,
-              stream: player.volumeStream,
-              onChanged: player.setVolume,
-            );
-          },
-        ),
 
         /// This StreamBuilder rebuilds whenever the player state changes, which
         /// includes the playing/paused state and also the
